@@ -137,7 +137,7 @@ app.get("/api/books", async (req: Request, res: Response) => {
 
 // GET all authors
 app.get("/api/authors", async (req: Request, res: Response) => {
-    let authors: AuthorResponse = await db.all("SELECT * FROM authors");
+    let authors: AuthorResponse = await db.all(`SELECT * FROM authors ORDER BY name`);
     res.json({ authors });
 });
 

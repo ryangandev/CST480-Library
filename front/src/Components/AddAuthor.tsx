@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import axios from "axios";
 import Header from "./Header";
+import AuthorTable from "./AuthorTable";
 
 interface Props {}
 
@@ -25,8 +26,9 @@ const AddAuthorForm: React.FC<Props> = () => {
     };
 
     return (
-        <div className="flex justify-center items-center bg-black">
-            <form className="bg-white p-10 rounded-lg " onSubmit={handleSubmit}>
+        <div className="">
+            <form className="bg-white p-10 rounded-lg border border-black mt-28 w-full" onSubmit={handleSubmit}>
+                <h2 className="text-center text-lg font-bold mb-5">Add a new author</h2>
                 <div className="mb-5">
                     <label htmlFor="name" className="text-lg font-medium mb-2">Name:</label>
                     <input
@@ -52,7 +54,7 @@ const AddAuthorForm: React.FC<Props> = () => {
                     type="submit"
                     className="bg-blue-500 text-white p-2 rounded-lg hover:bg-blue-600"
                     >
-                    Submit
+                    Add Author
                 </button>
             </form>
         </div>
@@ -63,7 +65,15 @@ export default function AddAuthor() {
     return (
         <>
             <Header page={ "Add Author" }/>
-            <AddAuthorForm />
+            <div className="">
+                <div className="w-1/4 float-left pl-10">
+                    <AddAuthorForm />
+                </div>
+                <div className="w-3/4 float-right">
+                    <AuthorTable />
+                </div>
+            </div>
+            
         </>
     )
 }

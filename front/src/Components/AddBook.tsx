@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import axios from "axios";
 import Header from "./Header";
+import AuthorTable from "./AuthorTable";
 
 interface Props {}
 
@@ -32,9 +33,10 @@ const AddBookForm: React.FC<Props> = () => {
     
     return (
         <div className="">
-            <form className="bg-white p-10 rounded-lg w-1/4 mx-auto" onSubmit={handleSubmit}>
+            <form className="bg-white p-10 rounded-lg border border-black mt-28 w-full" onSubmit={handleSubmit}>
+                <h2 className="text-center text-lg font-bold mb-5">Add a new book</h2>
                 <div className="mb-5">
-                    <label htmlFor="authorId" className="block text-lg font-medium mb-2">Author ID:</label>
+                    <label htmlFor="authorId" className="text-lg font-medium mb-2">Author ID:</label>
                     <input
                         type="text"
                         id="authorId"
@@ -45,7 +47,7 @@ const AddBookForm: React.FC<Props> = () => {
                 </div>
     
                 <div className="mb-5">
-                    <label htmlFor="title" className="block text-lg font-medium mb-2">Title:</label>
+                    <label htmlFor="title" className="text-lg font-medium mb-2">Title:</label>
                     <input
                         type="text"
                         id="title"
@@ -56,7 +58,7 @@ const AddBookForm: React.FC<Props> = () => {
                 </div>
     
                 <div className="mb-5">
-                    <label htmlFor="pubYear" className="block text-lg font-medium mb-2">Publication Year:</label>
+                    <label htmlFor="pubYear" className="text-lg font-medium mb-2">Publication Year:</label>
                     <input
                         type="text"
                         id="pubYear"
@@ -67,7 +69,7 @@ const AddBookForm: React.FC<Props> = () => {
                 </div>
     
                 <div className="mb-5">
-                    <label htmlFor="genre" className="block text-lg font-medium mb-2">Genre:</label>
+                    <label htmlFor="genre" className="text-lg font-medium mb-2">Genre:</label>
                     <input
                         type="text"
                         id="genre"
@@ -92,7 +94,14 @@ export default function AddBook() {
     return (
         <>
             <Header page={ "Add Book" }/>
-            <AddBookForm />
+            <div className="">
+                <div className="w-1/4 float-left pl-10">
+                    <AddBookForm />
+                </div>
+                <div className="w-3/4 float-right">
+                    <AuthorTable />
+                </div>
+            </div>
         </>
         
     )
