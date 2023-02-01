@@ -10,6 +10,7 @@ const AddBookForm: React.FC<Props> = () => {
     const [title, setTitle] = useState("");
     const [pubYear, setPubYear] = useState("");
     const [genre, setGenre] = useState("");
+    const [responseData, setResponseData] = useState<{ error?: string, message?: string } | null>(null);
 
     const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
         event.preventDefault();
@@ -22,6 +23,7 @@ const AddBookForm: React.FC<Props> = () => {
                 genre,
             });
             console.log(response.data);
+            setResponseData(response.data);
             setAuthorId("");
             setTitle("");
             setPubYear("");
@@ -33,7 +35,7 @@ const AddBookForm: React.FC<Props> = () => {
     
     return (
         <div className="">
-            <form className="bg-white p-10 rounded-lg border border-black mt-28 w-full" onSubmit={handleSubmit}>
+            <form className="bg-white p-10 rounded-lg border border-black my-28 w-full" onSubmit={handleSubmit}>
                 <h2 className="text-center text-lg font-bold mb-5">Add a new book</h2>
                 <div className="mb-5">
                     <label htmlFor="authorId" className="text-lg font-medium mb-2">Author ID:</label>
@@ -85,7 +87,16 @@ const AddBookForm: React.FC<Props> = () => {
                 >
                     Add Book
                 </button>
+                <div className="mt-5">
+                    {responseData?.error && (
+                        <p className="text-red-500 font-bold">{responseData.error}</p>
+                    )}
+                    {responseData?.message && (
+                        <p className="text-green-500 font-bold">{responseData.message}</p>
+                    )}
+                </div>
             </form>
+            
         </div>
     );
 };

@@ -1,4 +1,5 @@
 import express, {Express, Request, Response } from "express";
+import path from "path";
 import sqlite3 from "sqlite3";
 import { open } from "sqlite";
 import * as url from "url";
@@ -233,7 +234,7 @@ app.post("/api/books", async (req: Request, res: Response) => {
         return res.status(500).json({ error: "Failed to insert book" });
     }
 
-    return res.status(201).json({ message: "Book created successfully" });
+    return res.status(201).json({ message: "Book created successfully!" });
 });
 
 // Post request to create a new author
@@ -252,7 +253,7 @@ app.post("/api/authors", async (req: Request, res: Response) => {
         return res.status(500).json({ error: "Failed to insert author" });
     }
 
-    return res.status(201).json({ message: "Author created successfully" });
+    return res.status(201).json({ message: "Author created successfully!" });
 })
 
 // DELETE a book based on id
@@ -296,6 +297,11 @@ app.delete("/api/authors/:id", async (req: Request, res: Response) => {
         return res.status(500).json({ error: "Failed to delete author" });
     }
 })
+
+// Uncommon this for deployment
+app.get("/*", (req, res) => {
+    res.sendFile(path.join(__dirname, "./out/public", "index.html"));
+});
 
 // run server
 let port: number = 3000;

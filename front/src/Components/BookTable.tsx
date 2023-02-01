@@ -49,6 +49,19 @@ const BookTable: React.FC = () => {
 
     return (
         <div className="w-3/4 mx-auto my-10">
+            <div className="my-5">
+                <p>Search by:
+                <span className="mx-3">
+                    <select className='border rounded-md border-black'>
+                        <option value="id">Book No.</option>
+                        <option value="title">Title</option>
+                        <option value="author_id">Author No.</option>
+                        <option value="genre">Genre</option>
+                        <option value="pub_year">Publication Year</option>
+                    </select>
+                </span>
+                </p>
+            </div>
             <table className="border w-full text-center">
                 <thead>
                 <tr className="bg-gray-300">
@@ -71,7 +84,7 @@ const BookTable: React.FC = () => {
                 ))}
                 </tbody>
             </table>
-    </div>
+        </div>
     );
 };
 

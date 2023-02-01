@@ -4,10 +4,14 @@ import Header from "./Header";
 import AuthorTable from "./AuthorTable";
 
 interface Props {}
+interface Error {
+    error: string;
+}
 
 const AddAuthorForm: React.FC<Props> = () => {
     const [name, setName] = useState("");
     const [bio, setBio] = useState("");
+    const [responseData, setResponseData] = useState<{ error?: string, message?: string } | null>(null);
 
     const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
         event.preventDefault();
@@ -18,16 +22,19 @@ const AddAuthorForm: React.FC<Props> = () => {
                 bio,
                 });
                 console.log(response.data);
+                console.log(response.status);
+                setResponseData(response.data);
                 setName("");
                 setBio("");
-        } catch (error) {
+        } catch (error: any) {
             console.error(error);
+            console.log(error.response?.status);
         }
     };
 
     return (
         <div className="">
-            <form className="bg-white p-10 rounded-lg border border-black mt-28 w-full" onSubmit={handleSubmit}>
+            <form className="bg-white p-10 rounded-lg border border-black my-28 w-full" onSubmit={handleSubmit}>
                 <h2 className="text-center text-lg font-bold mb-5">Add a new author</h2>
                 <div className="mb-5">
                     <label htmlFor="name" className="text-lg font-medium mb-2">Name:</label>
@@ -56,7 +63,16 @@ const AddAuthorForm: React.FC<Props> = () => {
                     >
                     Add Author
                 </button>
+                <div className="mt-5">
+                    {responseData?.error && (
+                        <p className="text-red-500 font-bold">{responseData.error}</p>
+                    )}
+                    {responseData?.message && (
+                        <p className="text-green-500 font-bold">{responseData.message}</p>
+                    )}
+                </div>
             </form>
+            
         </div>
     );
 };
