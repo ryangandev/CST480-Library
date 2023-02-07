@@ -1,13 +1,17 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import axios from "axios";
 import Header from "./Header";
 import AuthorTable from "./AuthorTable";
+import { FormGroup, FormControl, InputLabel, Input, Button } from "@mui/material";
 
 interface Props {}
 interface Error {
     error: string;
-}
-
+}   
+interface Author {
+    id: number;
+    name: string;
+  }
 const AddAuthorForm: React.FC<Props> = () => {
     const [name, setName] = useState("");
     const [bio, setBio] = useState("");
@@ -26,7 +30,7 @@ const AddAuthorForm: React.FC<Props> = () => {
                 setResponseData(response.data);
                 setName("");
                 setBio("");
-        } catch (error: any) {
+        } catch (error: any) {  
             console.error(error);
             console.log(error.response?.status);
         }
@@ -34,45 +38,44 @@ const AddAuthorForm: React.FC<Props> = () => {
 
     return (
         <div className="">
-            <form className="bg-white p-10 rounded-lg border border-black my-28 w-full" onSubmit={handleSubmit}>
-                <h2 className="text-center text-lg font-bold mb-5">Add a new author</h2>
-                <div className="mb-5">
-                    <label htmlFor="name" className="text-lg font-medium mb-2">Name:</label>
-                    <input
-                        type="text"
-                        id="name"
-                        value={name}
-                        onChange={(event) => setName(event.target.value)}
-                        className="w-full border border-gray-400 p-2"
-                    />
-                </div>
+            <form onSubmit={handleSubmit}>
+                <FormGroup className="bg-white p-10 rounded-lg border border-black my-28 w-full">
+                    
+                    <h2 className="text-center text-lg font-bold mb-5">Add a new author</h2>
+                    <FormControl className="mb-10">
+                        <InputLabel htmlFor="name">Name</InputLabel>
+                        <Input 
+                            id="name" 
+                            value={name} 
+                            onChange={(event) => setName(event.target.value)} />
+                    </FormControl>
 
-                <div className="mb-5">
-                    <label htmlFor="bio" className="text-lg font-medium mb-2">Bio:</label>
-                    <textarea
-                        id="bio"
-                        value={bio}
-                        onChange={(event) => setBio(event.target.value)}
-                        className="w-full border border-gray-400 p-2"
-                        />
-                </div>
-                
-                <button
-                    type="submit"
-                    className="bg-blue-500 text-white p-2 rounded-lg hover:bg-blue-600"
-                    >
-                    Add Author
-                </button>
-                <div className="mt-5">
-                    {responseData?.error && (
-                        <p className="text-red-500 font-bold">{responseData.error}</p>
-                    )}
-                    {responseData?.message && (
-                        <p className="text-green-500 font-bold">{responseData.message}</p>
-                    )}
-                </div>
+                    <FormControl className="mb-10">
+                        <InputLabel htmlFor="bio">Bio</InputLabel>
+                        <Input 
+                            multiline={true} 
+                            id="bio" 
+                            value={bio}
+                            onChange={(event) => setBio(event.target.value)} />
+                    </FormControl>
+
+                    <Button 
+                        type="submit" 
+                        variant="contained" 
+                        color="primary">
+                        Add Author
+                    </Button>
+                    <div className="mt-5">
+                        {responseData?.error && (
+                            <p className="text-red-500 font-bold">{responseData.error}</p>
+                        )}
+                        {responseData?.message && (
+                            <p className="text-green-500 font-bold">{responseData.message}</p>
+                        )}
+                    </div>
+                    
+                </FormGroup>
             </form>
-            
         </div>
     );
 };

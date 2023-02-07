@@ -2,8 +2,13 @@
   "name": "front",
   "version": "0.1.0",
   "private": true,
-  "proxy": "http://localhost:3000",
   "dependencies": {
+    "@emotion/react": "^11.10.5",
+    "@emotion/styled": "^11.10.5",
+    "@mui/icons-material": "^5.11.0",
+    "@mui/material": "^5.11.7",
+    "@mui/x-data-grid": "^5.17.22",
+    "@mui/x-data-grid-pro": "^5.17.22",
     "@testing-library/jest-dom": "^5.16.5",
     "@testing-library/react": "^13.4.0",
     "@testing-library/user-event": "^13.5.0",
@@ -17,10 +22,11 @@
     "react-hook-form": "^7.43.0",
     "react-router-dom": "^6.8.0",
     "react-scripts": "5.0.1",
+    "tss-react": "^4.6.0",
     "web-vitals": "^2.1.4"
   },
   "scripts": {
-    "start": "cross-env PORT=3006 && react-scripts start",
+    "start": "cross-env PORT=3001 && react-scripts start",
     "build": "react-scripts build && move \"build\" \"../out/public\"",
     "test": "react-scripts test",
     "eject": "react-scripts eject"
