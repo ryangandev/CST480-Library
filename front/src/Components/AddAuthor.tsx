@@ -60,6 +60,7 @@ const AddAuthorForm: React.FC<Props> = () => {
                     </FormControl>
 
                     <Button 
+                        className="mt-5"
                         type="submit" 
                         variant="contained" 
                         color="primary">

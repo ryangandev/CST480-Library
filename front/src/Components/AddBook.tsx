@@ -3,6 +3,7 @@ import axios from "axios";
 import Header from "./Header";
 import AuthorTable from "./AuthorTable";
 import { FormGroup, FormControl, InputLabel, Input, Button } from "@mui/material";
+import '../styles/AddBookForm.css';
 
 interface Props {}
 
@@ -80,6 +81,7 @@ const AddBookForm: React.FC<Props> = () => {
                     </FormControl>
 
                     <Button 
+                        className="mt-5"
                         type="submit" 
                         variant="contained" 
                         color="primary">

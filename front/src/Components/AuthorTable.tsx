@@ -17,6 +17,7 @@ type AuthorResponse = Author[] | Error;
 
 const AuthorTable: React.FC = () => {
     const [authors, setAuthors] = useState<AuthorResponse>([]);
+    const [rowid, setRowId] = useState(null);
 
     useEffect(() => {
         const fetchAuthors = async () => {
@@ -26,7 +27,7 @@ const AuthorTable: React.FC = () => {
         };
 
         fetchAuthors();
-    }, []);
+    }, [authors]);
 
     const handleAuthorDelete = async (event: React.MouseEvent<HTMLButtonElement>) => {
         const authorId = event.currentTarget.value;
@@ -50,12 +51,14 @@ const AuthorTable: React.FC = () => {
     const columns: GridColDef[] = [
         { field: 'id', headerName: 'Author No.', width: 150, headerAlign: "center" },
         { field: 'name', headerName: 'Author Name', width: 250, headerAlign: "center" },
-        { field: 'bio', headerName: 'Author Bio', width: 300, headerAlign: "center" },
+        { field: 'bio', headerName: 'Author Bio', width: 300, headerAlign: "center", sortable: false, filterable: false },
         { field:
             'action',
             headerName: '',  
-            width: 150,
+            width: 120,
             headerAlign: "center",
+            type: 'action',
+            //renderCell: (params) => <UserActions {...{params, rowid, setRowId}} />
             renderCell: (params) => {
                 return <>
                     <button 
@@ -64,7 +67,7 @@ const AuthorTable: React.FC = () => {
                         onClick={handleAuthorDelete}><DeleteIcon /></button>
                     </>
             }
-        },
+        }, 
       ];
 
     const rows = Array.isArray(authors) ? authors.map((row) => ({
@@ -81,18 +84,11 @@ const AuthorTable: React.FC = () => {
                     rows={rows}
                     columns={columns}
                     pageSize={10}
-                    rowsPerPageOptions={[10]}
-                    checkboxSelection
+                    rowsPerPageOptions={[5, 10, 20]}
+                    //checkboxSelection
+
                 />
             </div>
-            {/* <div className="text-center pt-10">
-                {Array.isArray(authors) && authors.length === 0 && (
-                    <p className='text-xl'>Authors Table is empty!
-                        <br></br>
-                        Start by adding an author!
-                        </p>
-                )}
-            </div> */}
         </div>
     );
 };

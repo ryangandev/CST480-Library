@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { DataGrid, GridColDef, GridValueGetterParams, GridApi } from '@mui/x-data-grid';
 import DeleteIcon from '@mui/icons-material/Delete';
+import '../styles/BookTable.css'
 
 interface Book {
     id: number;
@@ -43,7 +44,7 @@ const BookTable: React.FC = () => {
 
         fetchBooks();
         fetchAuthors();
-    }, []);
+    }, [books, authors]);
 
     const handleAuthorSelect = (event: React.ChangeEvent<HTMLSelectElement>) => {
         setSearchTerm(event.target.value);
@@ -71,16 +72,15 @@ const BookTable: React.FC = () => {
     const columns: GridColDef[] = [
         { field: 'id', headerName: 'Book No.', width: 120, headerAlign: "center" },
         { field: 'title', headerName: 'Book Title', width: 250, headerAlign: "center", editable: true },
-        { field: 'author_name', headerName: 'Author No.', width: 200, headerAlign: "center" },
-        { field: 'genre', headerName: 'Genre', width: 200, headerAlign: "center"},
-        { field: 'pub_year', headerName: 'Publication Year', type: 'number', width: 200, headerAlign: "center" },
+        { field: 'author_name', headerName: 'Author No.', width: 200, headerAlign: "center", editable: true },
+        { field: 'genre', headerName: 'Genre', width: 200, headerAlign: "center", editable: true},
+        { field: 'pub_year', headerName: 'Publication Year', width: 200, headerAlign: "center", editable: true },
         { field: 
             'action', 
             headerName: '', 
             width: 120, 
             sortable: false,
             renderCell: (params) => {
-                console.log(params.id);
                 return <>
                     <button 
                         value={params.id} 
@@ -107,9 +107,8 @@ const BookTable: React.FC = () => {
                     rows={rows}
                     columns={columns}
                     pageSize={10}
-                    rowsPerPageOptions={[10]}
-                    checkboxSelection
-                    disableSelectionOnClick
+                    rowsPerPageOptions={[5, 10, 20]}
+                    //checkboxSelection
                 />
             </div>
         </div>

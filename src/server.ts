@@ -298,6 +298,39 @@ app.delete("/api/authors/:id", async (req: Request, res: Response) => {
     }
 })
 
+// PUT request to update a book
+app.put("/api/books/:id", async (req: Request, res: Response) => {
+    // check input is empty
+    if (!req.body.id || !req.body.author_id || !req.body.title || !req.body.pub_year || !req.body.genre) {
+        return res.status(400).json({ error: "Missing required fields" });
+    }
+
+    // check if book exists
+    let book: Book | undefined = await db.get("SELECT * FROM books WHERE id = ?", req.body.id);
+    if (!book) {
+        return res.status(404).json({ error: "Book not found" });
+    }
+
+    // check if author exists
+    let author: Author | undefined = await db.get("SELECT * FROM authors WHERE id = ?", req.body.author_id);
+    if (!author) {
+        return res.status(404).json({ error: "Author not found, create the author first" });
+    }
+    
+    // update book in the books table
+    try {
+        let statement = await db.prepare(
+            "UPDATE books SET author_id = ?, title = ?, pub_year = ?, genre = ? WHERE id = ?"
+        );
+        await statement.bind([req.body.author_id, req.body.title, req.body.pub_year, req.body.genre, req.params.id]);
+        await statement.run();
+    } catch (err) {
+        return res.status(500).json({ error: "Failed to update book" });
+    }
+    
+    return res.status(200).json({ message: "Book updated successfully!" });
+});
+
 // Uncommon this for deployment
 app.get("/*", (req, res) => {
     res.sendFile(path.join(__dirname, "./out/public", "index.html"));
