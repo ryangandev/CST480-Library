@@ -101,13 +101,13 @@ const BookTable: React.FC = () => {
     })) : [];
 
     return (
-        <div className="w-3/5 mx-auto my-10">
+        <div className="px-20 mx-auto my-10">
             <div style={{ height: 700, width: '100%' }}>
                 <DataGrid
                     rows={rows}
                     columns={columns}
                     pageSize={10}
-                    rowsPerPageOptions={[5, 10, 20]}
+                    rowsPerPageOptions={[10]}
                     //checkboxSelection
                 />
             </div>

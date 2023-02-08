@@ -77,14 +77,14 @@ const AuthorTable: React.FC = () => {
     })) : [];
 
     return (
-        <div className="w-2/3 mx-auto my-10">
+        <div className="px-20 mx-auto my-10">
             <h2 className="text-2xl font-bold mb-5">Authors</h2>
             <div style={{ height: 700, width: '100%' }}>
                 <DataGrid
                     rows={rows}
                     columns={columns}
                     pageSize={10}
-                    rowsPerPageOptions={[5, 10, 20]}
+                    rowsPerPageOptions={[10]}
                     //checkboxSelection
 
                 />

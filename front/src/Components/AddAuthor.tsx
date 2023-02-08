@@ -42,7 +42,7 @@ const AddAuthorForm: React.FC<Props> = () => {
                 <FormGroup className="bg-white p-10 rounded-lg border border-black my-28 w-full">
                     
                     <h2 className="text-center text-lg font-bold mb-5">Add a new author</h2>
-                    <FormControl className="mb-10">
+                    <FormControl required sx={{ m: 1, minWidth: 120 }}>
                         <InputLabel htmlFor="name">Name</InputLabel>
                         <Input 
                             id="name" 
@@ -50,7 +50,7 @@ const AddAuthorForm: React.FC<Props> = () => {
                             onChange={(event) => setName(event.target.value)} />
                     </FormControl>
 
-                    <FormControl className="mb-10">
+                    <FormControl required sx={{ m: 1, minWidth: 120 }}>
                         <InputLabel htmlFor="bio">Bio</InputLabel>
                         <Input 
                             multiline={true} 
@@ -63,7 +63,8 @@ const AddAuthorForm: React.FC<Props> = () => {
                         className="mt-5"
                         type="submit" 
                         variant="contained" 
-                        color="primary">
+                        color="primary"
+                        sx={{ mt:2, width: 150}}>
                         Add Author
                     </Button>
                     <div className="mt-5">

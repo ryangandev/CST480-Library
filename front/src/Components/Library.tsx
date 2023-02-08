@@ -12,6 +12,7 @@ const UpdateBookForm: React.FC = () => {
     const [pubYear, setPubYear] = useState("");
     const [genre, setGenre] = useState("");
     const [responseData, setResponseData] = useState<{ error?: string, message?: string } | null>(null);
+    const [errorMessage, setErrorMessage] = useState("");
 
     const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
         event.preventDefault();
@@ -31,8 +32,9 @@ const UpdateBookForm: React.FC = () => {
             setTitle("");
             setPubYear("");
             setGenre("");
-        } catch (error) {
+        } catch (error:any) {
             console.error(error);
+            setErrorMessage(error.response.data.message);
         }
     };
 
@@ -41,7 +43,7 @@ const UpdateBookForm: React.FC = () => {
             <form onSubmit={handleSubmit}>
                 <FormGroup className="bg-white p-10 rounded-lg border border-black my-28 w-full">
                     <h2 className="text-center text-lg font-bold mb-5">Update a book</h2>
-                    <FormControl>
+                    <FormControl required sx={{ m: 1, minWidth: 120 }}>
                         <InputLabel htmlFor="bookId">Book ID</InputLabel>
                         <Input 
                             id="bookId"
@@ -49,7 +51,7 @@ const UpdateBookForm: React.FC = () => {
                             onChange={(event) => setBookId(event.target.value)} />
                     </FormControl>
 
-                    <FormControl className="mb-10">
+                    <FormControl required sx={{ m: 1, minWidth: 120 }}>
                         <InputLabel htmlFor="authorId">Author ID</InputLabel>
                         <Input 
                             id="authorId"
@@ -57,7 +59,7 @@ const UpdateBookForm: React.FC = () => {
                             onChange={(event) => setAuthorId(event.target.value)} />
                     </FormControl>
 
-                    <FormControl className="mb-10">
+                    <FormControl required sx={{ m: 1, minWidth: 120 }}>
                         <InputLabel htmlFor="title">Title</InputLabel>
                         <Input
                             id="title"
@@ -65,7 +67,7 @@ const UpdateBookForm: React.FC = () => {
                             onChange={(event) => setTitle(event.target.value)} />
                     </FormControl>
 
-                    <FormControl className="mb-10">
+                    <FormControl required sx={{ m: 1, minWidth: 120 }}>
                         <InputLabel htmlFor="genre">Genre</InputLabel>
                         <Input
                             id="genre"
@@ -73,7 +75,7 @@ const UpdateBookForm: React.FC = () => {
                             onChange={(event) => setGenre(event.target.value)} />
                     </FormControl>
 
-                    <FormControl className="mb-10">
+                    <FormControl required sx={{ m: 1, minWidth: 120 }}>
                         <InputLabel htmlFor="pubYear">Publication Year</InputLabel>
                         <Input
                             id="pubYear"
@@ -85,8 +87,9 @@ const UpdateBookForm: React.FC = () => {
                         className="mt-5"
                         type="submit" 
                         variant="contained" 
-                        color="primary">
-                        Add Book
+                        color="primary"
+                        sx={{ mt:2, width: 150}}>
+                        Update Book
                     </Button>
                     
                     <div className="mt-5">
@@ -94,7 +97,7 @@ const UpdateBookForm: React.FC = () => {
                             <p className="text-red-500 font-bold">{responseData.error}</p>
                         )}
                         {responseData?.message && (
-                            <p className="text-green-500 font-bold">{responseData.message}</p>
+                            <p className="text-green-500 font-bold">{errorMessage}</p>
                         )}
                     </div>
                 </FormGroup>

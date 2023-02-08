@@ -48,7 +48,7 @@ const AddBookForm: React.FC<Props> = () => {
             <form onSubmit={handleSubmit}>
                 <FormGroup className="bg-white p-10 rounded-lg border border-black my-28 w-full">
                     <h2 className="text-center text-lg font-bold mb-5">Add a new book</h2>
-                    <FormControl>
+                    <FormControl required sx={{ m: 1, minWidth: 120 }}>
                         <InputLabel htmlFor="authorId">Author ID</InputLabel>
                         <Input 
                             id="authorId"
@@ -56,7 +56,7 @@ const AddBookForm: React.FC<Props> = () => {
                             onChange={(event) => setAuthorId(event.target.value)} />
                     </FormControl>
 
-                    <FormControl className="mb-10">
+                    <FormControl required sx={{ m: 1, minWidth: 120 }}>
                         <InputLabel htmlFor="title">Title</InputLabel>
                         <Input
                             id="title"
@@ -64,7 +64,7 @@ const AddBookForm: React.FC<Props> = () => {
                             onChange={(event) => setTitle(event.target.value)} />
                     </FormControl>
 
-                    <FormControl className="mb-10">
+                    <FormControl required sx={{ m: 1, minWidth: 120 }}>
                         <InputLabel htmlFor="genre">Genre</InputLabel>
                         <Input
                             id="genre"
@@ -72,7 +72,7 @@ const AddBookForm: React.FC<Props> = () => {
                             onChange={(event) => setGenre(event.target.value)} />
                     </FormControl>
 
-                    <FormControl className="mb-10">
+                    <FormControl required sx={{ m: 1, minWidth: 120 }}>
                         <InputLabel htmlFor="pubYear">Publication Year</InputLabel>
                         <Input
                             id="pubYear"
@@ -84,7 +84,8 @@ const AddBookForm: React.FC<Props> = () => {
                         className="mt-5"
                         type="submit" 
                         variant="contained" 
-                        color="primary">
+                        color="primary"
+                        sx={{ mt:2, width: 150}}>
                         Add Book
                     </Button>
                     
