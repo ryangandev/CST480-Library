@@ -20,39 +20,6 @@ let db = await open({
 });
 await db.get("PRAGMA foreign_keys = ON");
 
-/*
-test("GET /foo?bar returns message", async () => {
-    let bar = "xyzzy";
-    let { data } = await axios.get(`${baseUrl}/foo?bar=${bar}`);
-    expect(data).toEqual({ message: `You sent: ${bar} in the query` });
-});
-
-test("GET /foo returns error", async () => {
-    try {
-        await axios.get(`${baseUrl}/foo`);
-    } catch (error) {
-        // casting needed b/c typescript gives errors "unknown" type
-        let errorObj = error as AxiosError;
-        // if server never responds, error.response will be undefined
-        // throw the error so typescript can perform type narrowing
-        if (errorObj.response === undefined) {
-            throw errorObj;
-        }
-        // now, after the if-statement, typescript knows
-        // that errorObj can't be undefined
-        let { response } = errorObj;
-        // TODO this test will fail, replace 300 with 400
-        expect(response.status).toEqual(300);
-        expect(response.data).toEqual({ error: "bar is required" });
-    }
-});
-
-test("POST /bar works good", async () => {
-    let bar = "xyzzy";
-    let result = await axios.post(`${baseUrl}/foo`, { bar });
-    expect(result.data).toEqual({ message: `You sent: ${bar} in the body` });
-});*/
-
 // Teardown function thtat executes after every test
 afterEach(async () => {   
     // clear all rows from books and authors table
@@ -342,7 +309,6 @@ test("POST /api/books creates a new book", async () => {
     // Getting the author_id of the inserted author
     let author = await db.get("SELECT * FROM authors WHERE name = ?", "Ryan");
     let author_id: number  = author.id;
-    console.log(isStringObject(author_id));
 
     // Sending a POST request with the required fields to create a new book
     let book = { author_id: Number(author_id), title: "Halo", pub_year: "2020", genre: "Fiction" };
@@ -392,6 +358,130 @@ test("POST /api/books fails with author not found", async () => {
     }
 });
 
+/**
+ * Tests for route "POST /api/authors" -- adding an author to the authors table
+ */
+test("POST /api/authors creates a new author", async () => {
+
+    // Sending a POST request with the required fields to create a new author
+    let author = { name: "Ryan", bio: "1975" };
+    let result = await axios.post(`${baseUrl}/api/authors`, author);
+    expect(result.status).toEqual(201);
+    expect(result.data).toEqual({ message: "Author created successfully!" });
+
+    // Checking that the new author was inserted into the authors table
+    let authors = await db.all("SELECT * FROM authors ");
+    expect(authors.length).toBe(1);
+    expect(authors[0]).toHaveProperty("name", authors[0].name);
+    expect(authors[0]).toHaveProperty("bio", authors[0].bio);
+});
+
+test("POST /api/authors fails with missing required fields", async () => {
+    let author = { bio: "1975" };
+  
+    try {
+        let result = await axios.post(`${baseUrl}/api/authors`, author);
+        } catch (error: any) {
+        expect(error.response.status).toEqual(400);
+        expect(error.response.data).toEqual({ error: "Missing required fields" });
+    }
+});
+
+/**
+ * Tests for route "DELETE /api/books/:id" -- delete a book from the books table
+ */
+test("DELETE /api/books/:id deletes a book", async () => {
+    // Inserting a new author into the authors table
+    let statement = await db.prepare("INSERT INTO authors(name, bio) VALUES (?, ?)");
+    await statement.bind(["Ryan", "1975"]);
+    await statement.run();
+
+    // Getting the author_id of the inserted author
+    let author = await db.get("SELECT * FROM authors WHERE name = ?", "Ryan");
+    let author_id = author.id;
+
+    // Inserting a new book into the books table
+    statement = await db.prepare("INSERT INTO books(author_id, title, pub_year, genre) VALUES (?, ?, ?, ?)");
+    await statement.bind([author_id, "Halo", "2020", "Fiction"]);
+    await statement.run();
+
+    // Getting the book_id of the inserted book 
+    let book = await db.get("SELECT * FROM books WHERE title = ?", "Halo");
+    let book_id = book.id;
+
+    // Sending a DELETE request to delete the book
+    let result = await axios.delete(`${baseUrl}/api/books/${book_id}`);
+    expect(result.status).toEqual(200);
+    expect(result.data).toEqual({ message: "Book deleted successfully!" });
+
+    // Checking that the book was deleted from the books table
+    let books = await db.all("SELECT * FROM books");
+    expect(books.length).toBe(0);
+});
+
+test("DELETE /api/books/:id fails with book not found", async () => {
+    try {
+        let result = await axios.delete(`${baseUrl}/api/books/1`);
+    } catch (error: any) {
+        expect(error.response.status).toEqual(404);
+        expect(error.response.data).toEqual({ error: "Book not found" });
+    }
+});
+
+/**
+ * Tests for route "DELETE /api/authors/:id" -- delete an author from the authors table
+    */
+test("DELETE /api/authors/:id deletes an author", async () => {
+    // Inserting a new author into the authors table
+    let statement = await db.prepare("INSERT INTO authors(name, bio) VALUES (?, ?)");
+    await statement.bind(["Ryan", "1975"]);
+    await statement.run();
+
+    // Getting the author_id of the inserted author
+    let author = await db.get("SELECT * FROM authors WHERE name = ?", "Ryan");
+    let author_id = author.id;
+
+    // Sending a DELETE request to delete the author
+    let result = await axios.delete(`${baseUrl}/api/authors/${author_id}`);
+    expect(result.status).toEqual(200);
+    expect(result.data).toEqual({ message: "Author deleted successfully!" });
+
+    // Checking that the author was deleted from the authors table
+    let authors = await db.all("SELECT * FROM authors");
+    expect(authors.length).toBe(0);
+});
+
+test("DELETE /api/authors/:id fails with author not found", async () => {
+    try {
+        let result = await axios.delete(`${baseUrl}/api/authors/1`);
+    } catch (error: any) {
+        expect(error.response.status).toEqual(404);
+        expect(error.response.data).toEqual({ error: "Author not found" });
+    }
+});
+
+test("DELETE /api/authors/:id fails with author has books", async () => {
+    // Inserting a new author into the authors table
+    let statement = await db.prepare("INSERT INTO authors(name, bio) VALUES (?, ?)");
+    await statement.bind(["Ryan", "1975"]);
+    await statement.run();
+
+    // Getting the author_id of the inserted author
+    let author = await db.get("SELECT * FROM authors WHERE name = ?", "Ryan");
+    let author_id = author.id;
+
+    // Inserting a new book into the books table
+    statement = await db.prepare("INSERT INTO books(author_id, title, pub_year, genre) VALUES (?, ?, ?, ?)");
+    await statement.bind([author_id, "Halo", "2020", "Fiction"]);
+    await statement.run();
+
+    try {
+        let result = await axios.delete(`${baseUrl}/api/authors/${author_id}`);
+    } catch (error: any) {
+        expect(error.response.status).toEqual(400);
+        expect(error.response.data).toEqual({ error: "Please delete the books written by this author first before deleting the author." });
+    }
+});
 
 /**
  * Tests for route "PUT /api/books/:id" -- update a book in the books table

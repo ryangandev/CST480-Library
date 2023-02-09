@@ -20,3 +20,5 @@ interface Error {
 // Declare types for books response and authors response
 type BookResponse = Book[] | Error;
 type AuthorResponse = Author[] | Error;
+
+export { Book, Author, Error, BookResponse, AuthorResponse };

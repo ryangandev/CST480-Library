@@ -269,7 +269,7 @@ app.delete("/api/books/:id", async (req: Request, res: Response) => {
         if (result.changes === 0) {
             return res.status(404).json({ error: "Book not found" });
         }
-        res.status(200).json({ message: "Book deleted successfully" });
+        res.status(200).json({ message: "Book deleted successfully!" });
     } catch (err) {
         res.status(500).json({ error: "Failed to delete book" });
     }
@@ -292,7 +292,7 @@ app.delete("/api/authors/:id", async (req: Request, res: Response) => {
 
         // delete the author
         await db.run("DELETE FROM authors WHERE id = ?", req.params.id);
-        return res.status(200).json({ message: "Author deleted successfully" });
+        return res.status(200).json({ message: "Author deleted successfully!" });
     } catch (err) {
         return res.status(500).json({ error: "Failed to delete author" });
     }
