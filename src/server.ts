@@ -3,6 +3,7 @@ import path from "path";
 import sqlite3 from "sqlite3";
 import { open } from "sqlite";
 import * as url from "url";
+import { Book, Author, Error, BookResponse, AuthorResponse } from "./types.js";
 
 let app: Express = express();
 app.use(express.static("public"));
@@ -107,28 +108,6 @@ app.get("/bar", async (req, res: FooResponse) => {
 // test it out! while server is running:
 // curl http://localhost:3000/bar*/
 
-// Interface declaration for Book, Author and Error type
-interface Book {
-    id: number;
-    author_id: string;
-    title: string;
-    pub_year: string;
-    genre: string;
-}
-
-interface Author {
-    id: number;
-    name: string;
-    bio: string;
-}
-
-interface Error {
-    error: string;
-}
-
-// Declare types for books response and authors response
-type BookResponse = Book[] | Error;
-type AuthorResponse = Author[] | Error;
 
 // GET all books
 app.get("/api/books", async (req: Request, res: Response) => {
@@ -330,11 +309,11 @@ app.put("/api/books/:id", async (req: Request, res: Response) => {
     
     return res.status(200).json({ message: "Book updated successfully!" });
 });
-
+/*
 // Uncommon this for deployment
 app.get("/*", (req, res) => {
     res.sendFile(path.join(__dirname, "./out/public", "index.html"));
-});
+});*/
 
 // run server
 let port: number = 3000;
