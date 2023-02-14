@@ -151,7 +151,7 @@ async function login(req: Request, res: Response<MessageResponse>) {
     // send the token as a cookie in the response
     res.cookie("token", token, cookieOptions);
     
-    return res.json({ message: "Success" });
+    return res.json({ message: "Logged in Successfully!" });
 }
 
 async function logout(req: Request, res: Response<EmptyResponse>) {

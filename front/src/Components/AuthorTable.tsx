@@ -22,7 +22,7 @@ const AuthorTable: React.FC = () => {
     useEffect(() => {
         const fetchAuthors = async () => {
             try {
-                const response = await axios.get('/api/authors');
+                const response = await axios.get('/api/authors', {withCredentials: true });
                 if (response.status === 200) {
                     const authors = await response.data;
                     setAuthors(authors.authors);

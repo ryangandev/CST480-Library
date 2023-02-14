@@ -32,6 +32,8 @@ const AddBookForm: React.FC<Props> = () => {
                 genre,
             });
             console.log(response.data);
+            console.log(response.data.message);
+            console.log(response.status);
             setResponseData(response.data);
             setAuthorId("");
             setTitle("");
@@ -39,6 +41,7 @@ const AddBookForm: React.FC<Props> = () => {
             setGenre("");
         } catch (error: any) {
             console.error(error);
+            console.log(error.response?.status);
             if (error.response?.status === 401) {
                 setResponseData({ error: "Please log in before adding a book" });
             }

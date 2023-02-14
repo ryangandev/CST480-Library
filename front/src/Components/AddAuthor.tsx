@@ -33,7 +33,7 @@ const AddAuthorForm: React.FC<Props> = () => {
             console.error(error);
             console.log(error.response?.status);
             if (error.response?.status === 401) {
-                setResponseData({ error: "Please log in before adding a book" });
+                setResponseData({ error: "Please log in before adding an author" });
             }
         }
     };

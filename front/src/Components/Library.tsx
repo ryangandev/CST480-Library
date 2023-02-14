@@ -34,6 +34,9 @@ const UpdateBookForm: React.FC = () => {
         } catch (error:any) {
             console.error(error);
             setErrorMessage(error.response.data.message);
+            if (error.response?.status === 401) {
+                setResponseData({ error: "Please log in before adding a book" });
+            }
         }
     };
 
@@ -96,7 +99,7 @@ const UpdateBookForm: React.FC = () => {
                             <p className="text-red-500 font-bold">{responseData.error}</p>
                         )}
                         {responseData?.message && (
-                            <p className="text-green-500 font-bold">{errorMessage}</p>
+                            <p className="text-green-500 font-bold">{responseData.message}</p>
                         )}
                     </div>
                 </FormGroup>
