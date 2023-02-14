@@ -1,12 +1,19 @@
-import express, {Express, Request, Response } from "express";
+import express, {Express, Request, Response, RequestHandler, CookieOptions } from "express";
+import * as argon2 from "argon2";
+import crypto from "crypto";
 import path from "path";
 import sqlite3 from "sqlite3";
 import { open } from "sqlite";
 import * as url from "url";
 import { Book, Author, Error, BookResponse, AuthorResponse } from "./types.js";
+import { z } from "zod";
+import cookieParser from "cookie-parser";
+import { EmptyResponse, MessageResponse } from "./types.js";
+import process from "process";
 
 let app: Express = express();
 app.use(express.static("public"));
+app.use(cookieParser());
 app.use(express.json());
 
 // create database "connection"
@@ -90,39 +97,120 @@ app.delete("/foo", (req, res) => {
 // ASYNC/AWAIT EXAMPLE
 //
 
+// Login Routes
+let loginSchema = z.object({
+    username: z.string().min(1),
+    password: z.string().min(1),
+});
+
+function makeToken() {
+    return crypto.randomBytes(32).toString("hex");
+}
+
+// e.g. { "z7fsga": { username: "mycoolusername" } }
+const tokenStorage: { [key: string]: { username: string } } = {};
+
+// need to use same options when creating and deleting cookie
+// or cookie won't be deleted
+const cookieOptions: CookieOptions = {
+    httpOnly: true, // JS can't access it
+    secure: true, // only sent over HTTPS connections
+    sameSite: "strict", // only sent to this domain
+};
+
+async function login(req: Request, res: Response<MessageResponse>) {
+    const parseResult = loginSchema.safeParse(req.body);
+    console.log(parseResult);
+    if (!parseResult.success) {
+        return res
+            .status(400)
+            .json({ message: "Username or password invalid" });
+    }
+    let { username, password } = parseResult.data;
+
+    // log user in if credentials valid
+    // use argon2 to hash the password
+    let user = await db.get(`SELECT * FROM users WHERE username = ?`, [username]);
+    if (!user) {
+        return res
+            .status(401)
+            .json({ message: "Username or password invalid" });
+    }
+    let hash = user.password;
+    let passwordMatch = await argon2.verify(hash, password);
+    if (!passwordMatch) {
+        return res
+            .status(401)
+            .json({ message: "Username or password invalid" });
+    }
+
+    // generate and store the token
+    let token = makeToken();
+    tokenStorage[token] = { username };
+
+    // send the token as a cookie in the response
+    res.cookie("token", token, cookieOptions);
+    
+    return res.json({ message: "Success" });
+}
+
+async function logout(req: Request, res: Response<EmptyResponse>) {
+    let { token } = req.cookies;
+    if (token === undefined) {
+        // already logged out
+        return res.send();
+    }
+    if (!tokenStorage.hasOwnProperty(token)) {
+        // token invalid
+        return res.send();
+    }
+    delete tokenStorage[token];
+    return res.clearCookie("token", cookieOptions).send();
+}
+
+const authorize: RequestHandler = (req, res, next) => {
+    // TODO only allow access if user logged in
+    // by sending error response if they're not
+    let { token } = req.cookies;
+    if (!token || !tokenStorage.hasOwnProperty(token)) {
+        return res
+            .status(401)
+            .json({ message: "Unauthorized" });
+    }
+    
+    next();
+};
+
+function publicAPI(req: Request, res: Response<MessageResponse>) {
+    return res.json({ message: "A public message" });
+}
+function privateAPI(req: Request, res: Response<MessageResponse>) {
+    return res.json({ message: "A private message" });
+}
+
+app.post("/login", login);
+app.post("/logout", logout);
+app.get("/public", publicAPI);
+app.get("/private", authorize, privateAPI);
+
 function sleep(ms: number) {
     return new Promise((resolve) => setTimeout(resolve, ms));
 }
-/*
-// need async keyword on request handler to use await inside it
-app.get("/bar", async (req, res: FooResponse) => {
-    console.log("Waiting...");
-    // await is equivalent to calling sleep.then(() => { ... })
-    // and putting all the code after this in that func body ^
-    await sleep(3000);
-    // if we omitted the await, all of this code would execute
-    // immediately without waiting for the sleep to finish
-    console.log("Done!");
-    return res.sendStatus(200);
-});
-// test it out! while server is running:
-// curl http://localhost:3000/bar*/
-
 
 // GET all books
-app.get("/api/books", async (req: Request, res: Response) => {
+app.get("/api/books", authorize ,async (req: Request, res: Response) => {
     let books: BookResponse = await db.all(`SELECT books.id, authors.name || ' (id: ' || authors.id || ')' AS author_name, books.title, books.pub_year, books.genre FROM books INNER JOIN authors ON books.author_id = authors.id ORDER BY books.title`);
     res.json({ books });
 });
 
 // GET all authors
-app.get("/api/authors", async (req: Request, res: Response) => {
+app.get("/api/authors", authorize, async (req: Request, res: Response) => {
     let authors: AuthorResponse = await db.all(`SELECT * FROM authors ORDER BY name`);
     res.json({ authors });
 });
 
 // GET a book with its unique id
-app.get("/api/books/:id", async (req: Request, res: Response) => {
+app.get("/api/books/:id", authorize, async (req: Request, res: Response) => {
     let book: Book | undefined = await db.get("SELECT * FROM books WHERE id = ?", req.params.id);
     if (!book) {
         return res.status(404).json({ error: "Book not found" });
@@ -131,7 +219,7 @@ app.get("/api/books/:id", async (req: Request, res: Response) => {
 });
 
 // GET a author with its unique id
-app.get("/api/authors/:id", async (req: Request, res: Response) => {
+app.get("/api/authors/:id", authorize, async (req: Request, res: Response) => {
     let author: Author | undefined  = await db.get("SELECT * FROM authors WHERE id = ?", req.params.id);
     if (!author) {
         return res.status(404).json({ error: "Author not found" });
@@ -140,7 +228,7 @@ app.get("/api/authors/:id", async (req: Request, res: Response) => {
 });
 
 // GET request to retrieve all books from an author
-app.get("/api/authors/:id/books", async (req: Request, res: Response) => {
+app.get("/api/authors/:id/books", authorize, async (req: Request, res: Response) => {
     let books: BookResponse = await db.all("SELECT * FROM books WHERE author_id = ?", req.params.id);
     if (!books) {
         return res.status(404).json({ error: "Books not found for this author" });
@@ -149,7 +237,7 @@ app.get("/api/authors/:id/books", async (req: Request, res: Response) => {
 });
 
 // GET request to retrieve all books from a genre
-app.get("/api/books/genre", async (req: Request, res: Response) => {
+app.get("/api/books/genre", authorize, async (req: Request, res: Response) => {
     // before change type for genre and params
     // const { genre } = req.query;
     // let query: string = "SELECT * FROM books";
@@ -172,7 +260,7 @@ app.get("/api/books/genre", async (req: Request, res: Response) => {
 });
 
 // GET request to retrieve all books of a certain publish year
-app.get("/api/books/year", async (req: Request, res: Response) => {
+app.get("/api/books/year", authorize, async (req: Request, res: Response) => {
     if (!req.query.pub_year) {
         return res.status(400).json({ error: "pub_year is required" });
     }
@@ -190,7 +278,7 @@ app.get("/api/books/year", async (req: Request, res: Response) => {
 
 
 // POST request to create a new book
-app.post("/api/books", async (req: Request, res: Response) => {
+app.post("/api/books", authorize, async (req: Request, res: Response) => {
     // check input is empty
     if (!req.body.author_id || !req.body.title || !req.body.pub_year || !req.body.genre) {
         return res.status(400).json({ error: "Missing required fields" });
@@ -217,7 +305,7 @@ app.post("/api/books", async (req: Request, res: Response) => {
 });
 
 // Post request to create a new author
-app.post("/api/authors", async (req: Request, res: Response) => {
+app.post("/api/authors", authorize, async (req: Request, res: Response) => {
     if (!req.body.name || !req.body.bio) {
         return res.status(400).json({ error: "Missing required fields" });
     }
@@ -236,7 +324,7 @@ app.post("/api/authors", async (req: Request, res: Response) => {
 })
 
 // DELETE a book based on id
-app.delete("/api/books/:id", async (req: Request, res: Response) => {
+app.delete("/api/books/:id", authorize, async (req: Request, res: Response) => {
     // check if the book exists
     let book: Book | undefined = await db.get("SELECT * FROM books WHERE id = ?", req.params.id);
     if (!book) {
@@ -255,7 +343,7 @@ app.delete("/api/books/:id", async (req: Request, res: Response) => {
 });
 
 // Delete an author based on id, ask to delete all their books first
-app.delete("/api/authors/:id", async (req: Request, res: Response) => {
+app.delete("/api/authors/:id", authorize, async (req: Request, res: Response) => {
     // check if the author exists
     let author: Author | undefined = await db.get("SELECT * FROM authors WHERE id = ?", req.params.id);
     if(!author) {
@@ -278,7 +366,7 @@ app.delete("/api/authors/:id", async (req: Request, res: Response) => {
 })
 
 // PUT request to update a book
-app.put("/api/books/:id", async (req: Request, res: Response) => {
+app.put("/api/books/:id", authorize, async (req: Request, res: Response) => {
     // check input is empty
     if (!req.body.id || !req.body.author_id || !req.body.title || !req.body.pub_year || !req.body.genre) {
         return res.status(400).json({ error: "Missing required fields" });
@@ -309,11 +397,11 @@ app.put("/api/books/:id", async (req: Request, res: Response) => {
     
     return res.status(200).json({ message: "Book updated successfully!" });
 });
-/*
+
 // Uncommon this for deployment
 app.get("/*", (req, res) => {
     res.sendFile(path.join(__dirname, "./out/public", "index.html"));
-});*/
+});
 
 // run server
 let port: number = 3000;

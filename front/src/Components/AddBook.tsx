@@ -1,6 +1,5 @@
 import React, { useState } from "react";
 import axios from "axios";
-import Header from "./Header";
 import AuthorTable from "./AuthorTable";
 import { FormGroup, FormControl, InputLabel, Input, Button } from "@mui/material";
 import '../styles/AddBookForm.css';
@@ -38,8 +37,11 @@ const AddBookForm: React.FC<Props> = () => {
             setTitle("");
             setPubYear("");
             setGenre("");
-        } catch (error) {
+        } catch (error: any) {
             console.error(error);
+            if (error.response?.status === 401) {
+                setResponseData({ error: "Please log in before adding a book" });
+            }
         }
     };
     
@@ -106,7 +108,6 @@ const AddBookForm: React.FC<Props> = () => {
 export default function AddBook() {
     return (
         <>
-            <Header page={ "Add Book" }/>
             <div className="">
                 <div className="w-1/4 float-left pl-10">
                     <AddBookForm />

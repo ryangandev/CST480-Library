@@ -1,12 +1,10 @@
 import React from "react";
 import { useNavigate } from "react-router-dom";
-import Header from "./Header";
 
 export default function Home() {
     const navigate = useNavigate();
     return (
         <>
-            <Header page={ "Home" }/>
             <div className="text-center py-16">
                 <p className="block text-6xl my-16">Welcome to Ryan's Library!</p>
                 <p className="block text-2xl my-10">Visit our <button className=" text-blue-500 underline underline-offset-auto" onClick={() => { navigate("/Library") }}>Library</button> to check out all of our current books!</p>

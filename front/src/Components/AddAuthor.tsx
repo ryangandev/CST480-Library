@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
-import Header from "./Header";
 import AuthorTable from "./AuthorTable";
 import { FormGroup, FormControl, InputLabel, Input, Button } from "@mui/material";
 
@@ -33,6 +32,9 @@ const AddAuthorForm: React.FC<Props> = () => {
         } catch (error: any) {  
             console.error(error);
             console.log(error.response?.status);
+            if (error.response?.status === 401) {
+                setResponseData({ error: "Please log in before adding a book" });
+            }
         }
     };
 
@@ -85,7 +87,6 @@ const AddAuthorForm: React.FC<Props> = () => {
 export default function AddAuthor() {
     return (
         <>
-            <Header page={ "Add Author" }/>
             <div className="">
                 <div className="w-1/4 float-left pl-10">
                     <AddAuthorForm />

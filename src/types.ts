@@ -17,8 +17,13 @@ interface Error {
     error: string;
 }
 
+interface MessageResponse {
+    message: string;
+}
+
 // Declare types for books response and authors response
 type BookResponse = Book[] | Error;
 type AuthorResponse = Author[] | Error;
+type EmptyResponse = "";
 
-export { Book, Author, Error, BookResponse, AuthorResponse };
+export { Book, Author, Error, BookResponse, AuthorResponse, MessageResponse, EmptyResponse };

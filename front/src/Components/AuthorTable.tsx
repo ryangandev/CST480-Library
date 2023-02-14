@@ -17,15 +17,23 @@ type AuthorResponse = Author[] | Error;
 
 const AuthorTable: React.FC = () => {
     const [authors, setAuthors] = useState<AuthorResponse>([]);
-    const [rowid, setRowId] = useState(null);
+    const [isLoggedIn, setIsLoggedIn] = useState<boolean>(false);
 
     useEffect(() => {
         const fetchAuthors = async () => {
-            const response = await axios.get('/api/authors');
-            const authors = await response.data;
-            setAuthors(authors.authors);
+            try {
+                const response = await axios.get('/api/authors');
+                if (response.status === 200) {
+                    const authors = await response.data;
+                    setAuthors(authors.authors);
+                    setIsLoggedIn(true);
+                } else {
+                    setIsLoggedIn(false);
+                }
+            } catch (error) {
+                console.log(error);
+            }
         };
-
         fetchAuthors();
     }, [authors]);
 
@@ -57,7 +65,6 @@ const AuthorTable: React.FC = () => {
             headerName: '',  
             width: 120,
             headerAlign: "center",
-            type: 'action',
             //renderCell: (params) => <UserActions {...{params, rowid, setRowId}} />
             renderCell: (params) => {
                 return <>
@@ -77,19 +84,28 @@ const AuthorTable: React.FC = () => {
     })) : [];
 
     return (
-        <div className="px-20 mx-auto my-10">
-            <h2 className="text-2xl font-bold mb-5">Authors</h2>
-            <div style={{ height: 700, width: '100%' }}>
-                <DataGrid
-                    rows={rows}
-                    columns={columns}
-                    pageSize={10}
-                    rowsPerPageOptions={[10]}
-                    //checkboxSelection
-
-                />
-            </div>
-        </div>
+        <>
+            {   
+                isLoggedIn?
+                <div className="px-20 mx-auto my-10">
+                    <h2 className="text-2xl font-bold mb-5">Authors</h2>
+                    <div style={{ height: 700, width: '100%' }}>
+                        <DataGrid
+                            rows={rows}
+                            columns={columns}
+                            pageSize={10}
+                            rowsPerPageOptions={[10]}
+                            //checkboxSelection
+                        />
+                    </div>
+                </div>
+                :
+                <div className="px-20 mx-auto my-10">
+                    <h2 className="text-2xl font-bold mb-5">Authors</h2>
+                    <p className="text-lg">You are not logged in. Please log in to view the authors.</p>
+                </div>
+            }
+        </>
     );
 };
 

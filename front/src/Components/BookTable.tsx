@@ -28,12 +28,22 @@ const BookTable: React.FC = () => {
     const [books, setBooks] = useState<BookResponse>([]);
     const [authors, setAuthors] = useState<AuthorResponse>([]);
     const [searchTerm, setSearchTerm] = useState('');
+    const [isLoggedIn, setIsLoggedIn] = useState<boolean>(false);
 
     useEffect(() => {
         const fetchBooks = async () => {
-            const response = await axios.get('/api/books');
-            const books = await response.data;
-            setBooks(books.books);
+            try {
+                const response = await axios.get('/api/books');
+                if (response.status === 200) {
+                    const books = await response.data;
+                    setBooks(books.books);
+                    setIsLoggedIn(true);
+                } else {
+                    setIsLoggedIn(false);
+                }
+            } catch (error) {
+                console.log(error);
+            }
         };
 
         const fetchAuthors = async () => {
@@ -44,7 +54,7 @@ const BookTable: React.FC = () => {
 
         fetchBooks();
         fetchAuthors();
-    }, [books, authors]);
+    }, []);
 
     const handleAuthorSelect = (event: React.ChangeEvent<HTMLSelectElement>) => {
         setSearchTerm(event.target.value);
@@ -101,17 +111,27 @@ const BookTable: React.FC = () => {
     })) : [];
 
     return (
-        <div className="px-20 mx-auto my-10">
-            <div style={{ height: 700, width: '100%' }}>
-                <DataGrid
-                    rows={rows}
-                    columns={columns}
-                    pageSize={10}
-                    rowsPerPageOptions={[10]}
-                    //checkboxSelection
-                />
-            </div>
-        </div>
+        <>
+            {
+                isLoggedIn?
+                <div className="px-20 mx-auto my-10">
+                    <div style={{ height: 700, width: '100%' }}>
+                        <DataGrid
+                            rows={rows}
+                            columns={columns}
+                            pageSize={10}
+                            rowsPerPageOptions={[10]}
+                            //checkboxSelection
+                        />
+                    </div>
+                </div>
+                :
+                <div className="flex flex-col items-center justify-center h-screen">
+                    <h1 className="text-4xl font-bold">You are not logged in!</h1>
+                    <h2 className="text-2xl font-bold">Please log in to view the table.</h2>
+                </div>
+            }
+        </>
     );
 };
 
