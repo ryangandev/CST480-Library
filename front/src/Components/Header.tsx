@@ -118,7 +118,6 @@ const LoginForm: FC = () => {
             className="items-center ml-auto"
             sx={{
                 display: 'flex',
-                flexWrap: 'wrap',
                 justifyContent: 'center',
                 typography: 'button',
                 '& > :not(style) + :not(style)': {
