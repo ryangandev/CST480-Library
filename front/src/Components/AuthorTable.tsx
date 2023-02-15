@@ -35,7 +35,7 @@ const AuthorTable: React.FC = () => {
             }
         };
         fetchAuthors();
-    }, [authors]);
+    }, []);
 
     const handleAuthorDelete = async (event: React.MouseEvent<HTMLButtonElement>) => {
         const authorId = event.currentTarget.value;

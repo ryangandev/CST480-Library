@@ -1,47 +1,70 @@
-import React, { FC, useState } from "react";
+import React, { FC, useState, useEffect } from "react";
 import LibraryIcon from "../Images/images.png";
-import { NavigateFunction, useNavigate } from "react-router-dom";
+import { NavigateFunction, useNavigate, Location, useLocation } from "react-router-dom";
 import Box from '@mui/material/Box';
 import Link from '@mui/material/Link';
 import axios from "axios";
 import { FormGroup, FormControl, InputLabel, Input, Button } from "@mui/material";
 import { Alert, AlertTitle } from '@mui/material';
 import Stack from '@mui/material/Stack';
+import { useSignIn } from "react-auth-kit";
 
-interface Message {
+interface Props {
     message: string;
+    isSuccess: boolean;
 }
 
 interface MessageResponse {
     message: string;
+    token: string;
 }
 
 // don't throw error if status code not 200 level
 axios.defaults.validateStatus = () => true;
 
-function ActionAlerts(props: Message) {
+function ActionAlerts(props: Props) {
+    const [isOpen, setIsOpen] = useState(true);
+
+    useEffect(() => {
+        if (props.message) {
+            setIsOpen(true);
+            closeAlertInThreeSeconds();
+        } else {
+            setIsOpen(false);
+        }
+      }, [props.message]);
+
+    const closeAlertInThreeSeconds = () => {
+        setTimeout(() => {
+            setIsOpen(false);
+        }, 3000);
+    };
+
     return (
-        <Stack sx={{ width: '100%' }} spacing={2}>
-            <Alert onClose={() => {}}>This is a success alert — check it out!</Alert>
-            <Alert
-                action={
-                    <Button color="inherit" size="small">
-                    UNDO
-                    </Button>
-                }
-            >
-            message
-            </Alert>
+        <Stack  sx={{ width: '100%' }} spacing={2}>
+            {isOpen && (
+                <Alert onClose={() => setIsOpen(false)} severity={props.isSuccess===true? 'success' : 'error'}>
+                    {props.message}
+                </Alert>
+            )}
         </Stack>
     );
-  }
+}
 
 const LoginForm: FC = () => {
     const [username, setUsername] = useState<string>("");
     const [password, setPassword] = useState<string>("");
     const [loginMessage, setLoginMessage] = useState("");
-    const [isLoggedin, setIsLoggedin] = useState(false);
+    const [isLoggedIn, setIsLoggedIn] = useState(
+        Boolean(localStorage.getItem("isLoggedIn"))
+      );
     const preventDefault = (event: React.SyntheticEvent) => event.preventDefault();
+    const signIn = useSignIn();
+
+    useEffect(() => {
+        setLoginMessage("");
+    }, [username, password]);
+
 
     const handleSubmit = async (event: React.SyntheticEvent) => {
         event.preventDefault();
@@ -54,12 +77,24 @@ const LoginForm: FC = () => {
                     username: username,
                     password: password,
                 },
+                withCredentials: true,
             });
+            
+            signIn({
+                token: response.data.token,
+                expiresIn: 1800,
+                tokenType: "Bearer",
+                authState: { username: username }
+            })
+
             if (response.status === 200) {
-                setIsLoggedin(true);
-                setLoginMessage("Login successful");
+                setIsLoggedIn(true);
+                localStorage.setItem("isLoggedIn", "true");
+                setLoginMessage(response.data.message);
+                console.log(response.data.message);
+                console.log(response.data);
             } else {
-                setLoginMessage("Login failed");
+                setLoginMessage(response.data.message);
             }
         } catch (error) {
             setLoginMessage("Login failed");
@@ -69,7 +104,8 @@ const LoginForm: FC = () => {
 
     const handlelLogout = async () => {
         console.log("logout");
-        setIsLoggedin(false);
+        setIsLoggedIn(false);
+        localStorage.removeItem("isLoggedIn");
         await axios({
             method: "post",
             url: "/logout",
@@ -77,7 +113,7 @@ const LoginForm: FC = () => {
     }
 
     return (
-        isLoggedin? 
+        isLoggedIn? 
         <Box
             className="items-center ml-auto"
             sx={{
@@ -91,6 +127,7 @@ const LoginForm: FC = () => {
             }}
             onClick={ preventDefault }
         >
+            <ActionAlerts message={loginMessage} isSuccess={isLoggedIn} />
             <Link href="#" underline="always" color="inherit" onClick={handlelLogout} >
             {'Logout'}
             </Link>
@@ -109,6 +146,8 @@ const LoginForm: FC = () => {
             }}
             onClick={ preventDefault }
             >
+            <ActionAlerts message={loginMessage} isSuccess={isLoggedIn} />
+
             <FormControl required sx={{ mx:1 }}>
                 <Input
                     // html input attribute
@@ -116,6 +155,7 @@ const LoginForm: FC = () => {
                     id="username"
                     type="text"
                     value={username}
+                    autoComplete="off"
                     placeholder="username"
                     onChange={(event) => setUsername(event.target.value)}
                     sx={{ color: 'white', mx:1, px:1 }}
@@ -140,25 +180,48 @@ const LoginForm: FC = () => {
     )
 }
 
-export default function Header() {
+function Header() {
+    const location: Location = useLocation();
     const navigate: NavigateFunction = useNavigate();
-    const page: string  = "Home";
-    const selectedStyle: string = "px-5 py-2 mx-1 rounded-lg bg-gray-700 hover:bg-gray-700 pointer-events-none";
-    const unselectedStyle: string = "px-5 py-2 mx-1 rounded-lg hover:bg-gray-700";
+    const isSelected = (path: string) => {
+        return location.pathname === path ? "bg-gray-700 pointer-events-none" : "hover:bg-gray-700";
+      };
 
     return (
         <header className="h-20 bg-gray-500 flex text-white pl-10 pr-32">
-            <a href="" className="mx-5 my-2">
+            <a href="/" className="mx-5 my-2">
                 <img src={ LibraryIcon } className="h-full object-contain" alt="Library Icon" />
             </a>
             {/* <p className="my-auto text-3xl mx-10">Ryan's Library</p> */}
-            <nav className="flex items-center mx-20">   
-                <button className={page==="Home" ? selectedStyle : unselectedStyle} onClick={() => navigate("/")}>Home</button>
-                <button className={page==="Library" ? selectedStyle : unselectedStyle} onClick={() => navigate("/Library")}>Library</button>
-                <button className={page==="Add Book" ? selectedStyle : unselectedStyle} onClick={() => navigate("/AddBook")}>Add Book</button>
-                <button className={page==="Add Author" ? selectedStyle : unselectedStyle} onClick={() => navigate("/AddAuthor")}>Add Author</button>
+            <nav className="flex items-center mx-20">
+                <button
+                    className={`px-5 py-2 mx-1 rounded-lg ${isSelected("/")}`}
+                    onClick={() => navigate("/")}
+                >
+                    Home
+                </button>
+                <button
+                    className={`px-5 py-2 mx-1 rounded-lg ${isSelected("/Library")}`}
+                    onClick={() => navigate("/Library")}
+                >
+                    Library
+                </button>
+                <button
+                    className={`px-5 py-2 mx-1 rounded-lg ${isSelected("/AddBook")}`}
+                    onClick={() => navigate("/AddBook")}
+                >
+                    Add Book
+                </button>
+                <button
+                    className={`px-5 py-2 mx-1 rounded-lg ${isSelected("/AddAuthor")}`}
+                    onClick={() => navigate("/AddAuthor")}
+                >
+                    Add Author
+                </button>
             </nav>
             <LoginForm />
         </header>
     )
 }
+
+export default Header;

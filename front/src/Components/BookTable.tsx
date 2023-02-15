@@ -54,7 +54,7 @@ const BookTable: React.FC = () => {
 
         fetchBooks();
         fetchAuthors();
-    }, [books, authors]);
+    }, []);
 
     const handleAuthorSelect = (event: React.ChangeEvent<HTMLSelectElement>) => {
         setSearchTerm(event.target.value);
