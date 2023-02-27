@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
-import AuthorTable from "./AuthorTable";
+import UserTable from "./UserTable";
 import { FormGroup, FormControl, InputLabel, Input, Button } from "@mui/material";
 
 interface Props {}
@@ -12,8 +12,9 @@ interface Author {
     name: string;
   }
 const AddAuthorForm: React.FC<Props> = () => {
-    const [name, setName] = useState("");
-    const [bio, setBio] = useState("");
+    const [name, setName] = useState<string>("");
+    const [userId, setUserId] = useState<string>("");
+    const [bio, setBio] = useState<string>("");
     const [responseData, setResponseData] = useState<{ error?: string, message?: string } | null>(null);
 
     const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
@@ -22,12 +23,14 @@ const AddAuthorForm: React.FC<Props> = () => {
         try {
             const response = await axios.post("/api/authors", {
                 name,
+                userId,
                 bio,
                 });
                 console.log(response.data);
                 console.log(response.status);
                 setResponseData(response.data);
                 setName("");
+                setUserId("");
                 setBio("");
         } catch (error: any) {  
             console.error(error);
@@ -44,6 +47,14 @@ const AddAuthorForm: React.FC<Props> = () => {
                 <FormGroup className="bg-white p-10 rounded-lg border border-black my-28 w-full">
                     
                     <h2 className="text-center text-lg font-bold mb-5">Add a new author</h2>
+                    <FormControl required sx={{ m: 1, minWidth: 120 }}>
+                        <InputLabel htmlFor="name">User ID</InputLabel>
+                        <Input 
+                            id="userId" 
+                            value={userId} 
+                            onChange={(event) => setUserId(event.target.value)} />
+                    </FormControl>
+
                     <FormControl required sx={{ m: 1, minWidth: 120 }}>
                         <InputLabel htmlFor="name">Name</InputLabel>
                         <Input 
@@ -92,7 +103,7 @@ export default function AddAuthor() {
                     <AddAuthorForm />
                 </div>
                 <div className="w-3/4 float-right">
-                    <AuthorTable />
+                    <UserTable />
                 </div>
             </div>
             

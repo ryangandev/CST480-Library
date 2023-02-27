@@ -7,6 +7,7 @@ interface Author {
     id: number;
     name: string;
     bio: string;
+    user_id: number;
   }
   
 interface Error {
@@ -59,6 +60,7 @@ const AuthorTable: React.FC = () => {
     const columns: GridColDef[] = [
         { field: 'id', headerName: 'Author No.', width: 150, headerAlign: "center" },
         { field: 'name', headerName: 'Author Name', width: 250, headerAlign: "center" },
+        { field: 'userId', headerName: 'User Id', width: 150, headerAlign: "center"},
         { field: 'bio', headerName: 'Author Bio', width: 300, headerAlign: "center", sortable: false, filterable: false },
         { field:
             'action',
@@ -80,6 +82,7 @@ const AuthorTable: React.FC = () => {
     const rows = Array.isArray(authors) ? authors.map((row) => ({
         id: row.id,
         name: row.name,
+        userId: row.user_id,
         bio: row.bio,
     })) : [];
 

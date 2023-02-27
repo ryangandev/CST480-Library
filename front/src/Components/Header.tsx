@@ -93,9 +93,6 @@ const LoginForm: FC = () => {
                 setIsLoggedIn(true);
                 localStorage.setItem("isLoggedIn", "true");
                 setLoginMessage(response.data.message);
-                console.log(response.status);
-                console.log(response.data.message);
-                console.log(response.data);
             } 
             else {
                 if (response.status === 429) {

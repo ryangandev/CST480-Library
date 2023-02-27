@@ -9,8 +9,15 @@ interface Book {
 
 interface Author {
     id: number;
+    user_id: string;
     name: string;
     bio: string;
+}
+
+interface User {
+    id: number;
+    username: string;
+    role: string;
 }
 
 interface Error {
@@ -24,6 +31,7 @@ interface MessageResponse {
 // Declare types for books response and authors response
 type BookResponse = Book[] | Error;
 type AuthorResponse = Author[] | Error;
+type UserData = User[] | Error;
 type EmptyResponse = "";
 
-export { Book, Author, Error, BookResponse, AuthorResponse, MessageResponse, EmptyResponse };
+export { Book, Author, Error, BookResponse, AuthorResponse, MessageResponse, EmptyResponse, User, UserData };

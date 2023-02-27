@@ -5,7 +5,7 @@ import path from "path";
 import sqlite3 from "sqlite3";
 import { open } from "sqlite";
 import * as url from "url";
-import { Book, Author, Error, BookResponse, AuthorResponse } from "./types.js";
+import { Book, Author, Error, BookResponse, AuthorResponse, User, UserData } from "./types.js";
 import { z } from "zod";
 import cookieParser from "cookie-parser";
 import { EmptyResponse, MessageResponse } from "./types.js";
@@ -246,6 +246,12 @@ app.get("/api/books/year", authorize, async (req: Request, res: Response) => {
     res.json({ books });
 });
 
+// GET request to retrieve all users from the database
+app.get("/api/users", authorize, async (req: Request, res: Response) => {
+    let users: UserData = await db.all(`SELECT * FROM users`);
+    res.json({ users });
+});
+
 
 // POST request to create a new book
 app.post("/api/books", authorize, async (req: Request, res: Response) => {
@@ -276,15 +282,27 @@ app.post("/api/books", authorize, async (req: Request, res: Response) => {
 
 // Post request to create a new author
 app.post("/api/authors", authorize, async (req: Request, res: Response) => {
-    if (!req.body.name || !req.body.bio) {
+    if (!req.body.name || !req.body.bio || !req.body.userId) {
         return res.status(400).json({ error: "Missing required fields" });
+    }
+
+    // check if user exists
+    let user: User | undefined = await db.get("SELECT * FROM users WHERE id = ?", req.body.userId);
+    if (!user) {
+        return res.status(404).json({ error: "User not found" });
+    }
+    
+    // check if user is already an author, if not, proceed to insert new author
+    let author: Author | undefined = await db.get("SELECT * FROM authors WHERE user_id = ?", req.body.userId);
+    if (author) {
+        return res.status(400).json({ error: "User is already an author" });
     }
 
     try {
         let statement = await db.prepare(
-            "INSERT INTO AUTHORS(name, bio) VALUES (?, ?)"
+            "INSERT INTO AUTHORS(user_id, name, bio) VALUES (?, ?, ?)"
         );
-        await statement.bind([req.body.name, req.body.bio]);
+        await statement.bind([req.body.userId, req.body.name, req.body.bio]);
         await statement.run();
     } catch (err) {
         return res.status(500).json({ error: "Failed to insert author" });
