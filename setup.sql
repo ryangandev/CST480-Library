@@ -9,8 +9,10 @@ CREATE TABLE books (
 
 CREATE TABLE authors (
     id INTEGER PRIMARY KEY, -- can change to be integer if you want
+    user_id TEXT,
     name TEXT,
-    bio TEXT
+    bio TEXT,
+    FOREIGN KEY(user_id) REFERENCES users(id)
 );
 
 CREATE TABLE users (

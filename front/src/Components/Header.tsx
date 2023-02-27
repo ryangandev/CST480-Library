@@ -19,6 +19,8 @@ interface MessageResponse {
     token: string;
 }
 
+type ErrorsResponse = { errors: string[] };
+
 // don't throw error if status code not 200 level
 axios.defaults.validateStatus = () => true;
 
@@ -91,10 +93,17 @@ const LoginForm: FC = () => {
                 setIsLoggedIn(true);
                 localStorage.setItem("isLoggedIn", "true");
                 setLoginMessage(response.data.message);
+                console.log(response.status);
                 console.log(response.data.message);
                 console.log(response.data);
-            } else {
-                setLoginMessage(response.data.message);
+            } 
+            else {
+                if (response.status === 429) {
+                    setLoginMessage("Too many login attempts. Please try again in a minute.");
+                    
+                }else {
+                    setLoginMessage(response.data.message);
+                }
             }
         } catch (error) {
             setLoginMessage("Login failed");

@@ -10,11 +10,15 @@ import { z } from "zod";
 import cookieParser from "cookie-parser";
 import { EmptyResponse, MessageResponse } from "./types.js";
 import process from "process";
+import rateLimit from "express-rate-limit";
+import helmet from "helmet";
 
 let app: Express = express();
+app.use(helmet());
 app.use(express.static("public"));
 app.use(cookieParser());
 app.use(express.json());
+
 
 // create database "connection"
 // use absolute path to avoid this issue
@@ -27,76 +31,6 @@ let db = await open({
 });
 await db.get("PRAGMA foreign_keys = ON");
 
-//
-// SQLITE EXAMPLES
-// comment these out or they'll keep inserting every time you run your server
-// if you get 'UNIQUE constraint failed' errors it's because
-// this will keep inserting a row with the same primary key
-// but the primary key should be unique
-//
-/*
-// insert example
-await db.run(
-    "INSERT INTO authors(id, name, bio) VALUES('1', 'Figginsworth III', 'A traveling gentleman.')"
-);
-await db.run(
-    "INSERT INTO books(id, author_id, title, pub_year, genre) VALUES ('1', '1', 'My Fairest Lady', '1866', 'romance')"
-);
-
-// insert example with parameterized queries
-// important to use parameterized queries to prevent SQL injection
-// when inserting untrusted data
-let statement = await db.prepare(
-    "INSERT INTO books(id, author_id, title, pub_year, genre) VALUES (?, ?, ?, ?, ?)"
-);
-await statement.bind(["2", "1", "A Travelogue of Tales", "1867", "adventure"]);
-await statement.run();
-
-// select examples
-let authors = await db.all("SELECT * FROM authors");
-console.log("Authors", authors);
-let books = await db.all("SELECT * FROM books WHERE author_id = '1'");
-console.log("Books", books);
-let filteredBooks = await db.all("SELECT * FROM books WHERE pub_year = '1867'");
-
-console.log("Some books", filteredBooks);*/
-
-/*
-//
-// EXPRESS EXAMPLES
-//
-
-// GET/POST/DELETE example
-interface Foo {
-    message: string;
-}
-interface Error {
-    error: string;
-}
-type FooResponse = Response<Foo | Error>;
-// res's type limits what responses this request handler can send
-// it must send either an object with a message or an error
-app.get("/foo", (req, res: FooResponse) => {
-    if (!req.query.bar) {
-        return res.status(400).json({ error: "bar is required" });
-    }
-    return res.json({ message: `You sent: ${req.query.bar} in the query` });
-});
-app.post("/foo", (req, res: FooResponse) => {
-    if (!req.body.bar) {
-        return res.status(400).json({ error: "bar is required" });
-    }
-    return res.json({ message: `You sent: ${req.body.bar} in the body` });
-});
-app.delete("/foo", (req, res) => {
-    // etc.
-    res.sendStatus(200);
-});*/
-
-//
-// ASYNC/AWAIT EXAMPLE
-//
-
 // Login Routes
 let loginSchema = z.object({
     username: z.string().min(1),
@@ -108,7 +42,7 @@ function makeToken() {
 }
 
 // e.g. { "z7fsga": { username: "mycoolusername" } }
-const tokenStorage: { [key: string]: { username: string } } = {};
+const tokenStorage: { [key: string]: { username: string, userId: string } } = {};
 
 // need to use same options when creating and deleting cookie
 // or cookie won't be deleted
@@ -117,6 +51,12 @@ const cookieOptions: CookieOptions = {
     secure: true, // only sent over HTTPS connections
     sameSite: "strict", // only sent to this domain
 };
+
+const limiter = rateLimit({
+    windowMs: 60 * 1000, // 1 minute
+    max: 5, // limit each IP to 5 requests per windowMs
+    message: "Too many requests from this IP, please try again in a minute"
+});
 
 async function login(req: Request, res: Response<MessageResponse>) {
     const parseResult = loginSchema.safeParse(req.body);
@@ -146,7 +86,7 @@ async function login(req: Request, res: Response<MessageResponse>) {
 
     // generate and store the token
     let token = makeToken();
-    tokenStorage[token] = { username };
+    tokenStorage[token] = { username, userId: user.id };
 
     // send the token as a cookie in the response
     res.cookie("token", token, cookieOptions);
@@ -181,17 +121,47 @@ const authorize: RequestHandler = (req, res, next) => {
     next();
 };
 
-function publicAPI(req: Request, res: Response<MessageResponse>) {
-    return res.json({ message: "A public message" });
-}
-function privateAPI(req: Request, res: Response<MessageResponse>) {
-    return res.json({ message: "A private message" });
+const authorizeAuthorRole: RequestHandler = async (req, res, next) => {
+    let { token } = req.cookies;
+    if (!token || !tokenStorage.hasOwnProperty(token)) {
+        return res
+            .status(401)
+            .json({ message: "Unauthorized" });
+    }
+
+    // only allow access if user is an author of the book
+    // by sending error response if they're not
+    const bookId = req.params.id;
+
+    // check if book exists
+    const book = await db.get("SELECT * FROM books WHERE id = ?", bookId);
+    if (!book) {
+        return res.status(404).json({ error: "Book not found" });
+    }
+
+    const authorId = book.author_id;
+    console.log("authorId retrieved from book is: ", authorId);
+    const author = await db.get("SELECT * FROM authors WHERE id = ?", authorId);
+    const authorUserId: string = author.user_id;
+    const { userId } = tokenStorage[token];
+
+    console.log("authorUserId retrieved from book is: ", authorUserId);
+    console.log("userId retrieved from token is: ", userId.toString());
+
+    console.log("authorUserId === userId: ", authorUserId === userId.toString());
+    // check if user is the author of the book
+    if (authorUserId !== userId.toString()) {
+        return res.status(401).json({ error: "You are not an authorized author to perform the action." });
+    }
+
+    // user is the author of the book, so allow the request to proceed
+    console.log("User is the author of the book, so allow the request to proceed");
+    next();
 }
 
-app.post("/login", login);
+app.post("/login", limiter, login);
 app.post("/logout", logout);
-app.get("/public", publicAPI);
-app.get("/private", authorize, privateAPI);
+
 
 function sleep(ms: number) {
     return new Promise((resolve) => setTimeout(resolve, ms));
@@ -324,7 +294,7 @@ app.post("/api/authors", authorize, async (req: Request, res: Response) => {
 })
 
 // DELETE a book based on id
-app.delete("/api/books/:id", authorize, async (req: Request, res: Response) => {
+app.delete("/api/books/:id", authorizeAuthorRole, async (req: Request, res: Response) => {
     // check if the book exists
     let book: Book | undefined = await db.get("SELECT * FROM books WHERE id = ?", req.params.id);
     if (!book) {
@@ -366,7 +336,7 @@ app.delete("/api/authors/:id", authorize, async (req: Request, res: Response) =>
 })
 
 // PUT request to update a book
-app.put("/api/books/:id", authorize, async (req: Request, res: Response) => {
+app.put("/api/books/:id", authorizeAuthorRole, async (req: Request, res: Response) => {
     // check input is empty
     if (!req.body.id || !req.body.author_id || !req.body.title || !req.body.pub_year || !req.body.genre) {
         return res.status(400).json({ error: "Missing required fields" });
